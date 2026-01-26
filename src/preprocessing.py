@@ -129,39 +129,37 @@ def aggregate_and_pivot(df_long: pd.DataFrame, freq: str = "D") -> pd.DataFrame:
     df["timestamp"] = pd.to_datetime(df["timestamp"], errors="coerce")
     df["timestamp"] = df["timestamp"].dt.floor(freq)
 
-    group_cols = [
-        "country",
-        "city",
-        "location",
-        "latitude",
-        "longitude",
-        "timestamp",
-        "pollutant",
-    ]
-    group_cols = [c for c in group_cols if c in df.columns]
-    grouped = (
-        df.groupby(group_cols, dropna=False)["value_std"]
-        .mean()
-        .reset_index()
-    )
+    preferred_keys = ["source_name", "location", "latitude", "longitude", "timestamp"]
+    fallback_keys = ["location", "latitude", "longitude", "timestamp"]
+    if all(k in df.columns for k in preferred_keys):
+        stable_keys = preferred_keys
+    else:
+        stable_keys = [k for k in fallback_keys if k in df.columns]
+    if not stable_keys:
+        raise ValueError("No stable keys found for aggregation.")
+
+    group_cols = stable_keys + ["pollutant"]
+    grouped = df.groupby(group_cols, dropna=False)["value_std"].mean().reset_index()
 
     wide = grouped.pivot_table(
-        index=[
-            c
-            for c in [
-                "country",
-                "city",
-                "location",
-                "latitude",
-                "longitude",
-                "timestamp",
-            ]
-            if c in grouped.columns
-        ],
+        index=stable_keys,
         columns="pollutant",
         values="value_std",
         aggfunc="mean",
     ).reset_index()
+
+    extra_cols = [c for c in ["country", "city"] if c in df.columns]
+    if extra_cols:
+        def _first_non_null(series: pd.Series):
+            series = series.dropna()
+            return series.iloc[0] if not series.empty else np.nan
+
+        meta = (
+            df.groupby(stable_keys, dropna=False)[extra_cols]
+            .agg(_first_non_null)
+            .reset_index()
+        )
+        wide = wide.merge(meta, on=stable_keys, how="left")
 
     wide.columns.name = None
     return wide
