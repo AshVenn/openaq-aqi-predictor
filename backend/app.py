@@ -12,7 +12,7 @@ if str(ROOT_DIR) not in sys.path:
 
 from .config import ALLOWED_ORIGINS
 from .model_loader import get_artifacts
-from .predict import INPUT_POLLUTANTS, build_feature_frame, compute_exact_aqi
+from .predict import POLLUTANTS_ALL, build_feature_frame, compute_exact_aqi
 from .schemas import InputSummary, ModelInfo, PredictRequest, PredictResponse
 from src.aqi import aqi_category
 
@@ -42,7 +42,9 @@ def predict(request: PredictRequest):
     if not feature_cols:
         raise HTTPException(status_code=500, detail="Feature columns not available.")
 
-    X, standardized, provided = build_feature_frame(request, feature_cols)
+    input_pollutants = artifacts.meta.get("input_pollutants", POLLUTANTS_ALL)
+
+    X, standardized, provided = build_feature_frame(request, feature_cols, input_pollutants)
     aqi_exact, aqi_category_exact = compute_exact_aqi(standardized)
 
     if artifacts.model is None:
@@ -56,7 +58,7 @@ def predict(request: PredictRequest):
 
     model_info = ModelInfo(
         best_model_name=artifacts.meta.get("best_model_name"),
-        input_pollutants=artifacts.meta.get("input_pollutants", INPUT_POLLUTANTS),
+        input_pollutants=artifacts.meta.get("input_pollutants", input_pollutants),
         features=artifacts.meta.get("features", feature_cols),
     )
 

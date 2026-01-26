@@ -1,6 +1,4 @@
-﻿from __future__ import annotations
-
-from pathlib import Path
+﻿from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np
@@ -17,15 +15,16 @@ from src.features import add_time_features
 
 from .schemas import PredictRequest
 
-INPUT_POLLUTANTS = ["pm25", "pm10", "no2", "o3", "co", "so2"]
+POLLUTANTS_ALL = ["pm25", "pm10", "no2", "o3", "co", "so2"]
 
 
 def _standardize_pollutants(
     pollutant_values: Dict[str, Optional[float]],
     unit_values: Optional[Dict[str, Optional[str]]],
+    pollutant_cols: List[str],
 ) -> Dict[str, Optional[float]]:
     standardized: Dict[str, Optional[float]] = {}
-    for pollutant in INPUT_POLLUTANTS:
+    for pollutant in pollutant_cols:
         value = pollutant_values.get(pollutant)
         unit = unit_values.get(pollutant) if unit_values else None
         if value is None or (isinstance(value, float) and np.isnan(value)):
@@ -40,24 +39,24 @@ def _standardize_pollutants(
 
 
 def build_feature_frame(
-    request: PredictRequest, feature_cols: List[str]
+    request: PredictRequest, feature_cols: List[str], pollutant_cols: List[str]
 ) -> Tuple[pd.DataFrame, Dict[str, Optional[float]], List[str]]:
     pollutant_values = request.pollutants.dict()
     unit_values = request.units.dict() if request.units else {}
 
-    standardized = _standardize_pollutants(pollutant_values, unit_values)
+    standardized = _standardize_pollutants(pollutant_values, unit_values, pollutant_cols)
 
     row = {
         "latitude": request.latitude,
         "longitude": request.longitude,
         "timestamp": request.timestamp,
     }
-    row.update({p: standardized.get(p) for p in INPUT_POLLUTANTS})
+    row.update({p: standardized.get(p) for p in pollutant_cols})
 
     df = pd.DataFrame([row])
     df = add_time_features(df, time_col="timestamp")
 
-    for pollutant in INPUT_POLLUTANTS:
+    for pollutant in pollutant_cols:
         df[f"{pollutant}_is_missing"] = df[pollutant].isna().astype(int)
 
     for col in feature_cols:
@@ -69,7 +68,9 @@ def build_feature_frame(
     return df[feature_cols], standardized, provided
 
 
-def compute_exact_aqi(standardized: Dict[str, Optional[float]]) -> Tuple[Optional[float], Optional[str]]:
+def compute_exact_aqi(
+    standardized: Dict[str, Optional[float]]
+) -> Tuple[Optional[float], Optional[str]]:
     row_values = {
         pollutant: (None if value is None else float(value))
         for pollutant, value in standardized.items()
