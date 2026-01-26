@@ -1,0 +1,19 @@
+[
+  "latitude",
+  "longitude",
+  "hour",
+  "day_of_week",
+  "month",
+  "pm25",
+  "pm10",
+  "no2",
+  "o3",
+  "co",
+  "so2",
+  "pm25_is_missing",
+  "pm10_is_missing",
+  "no2_is_missing",
+  "o3_is_missing",
+  "co_is_missing",
+  "so2_is_missing"
+]

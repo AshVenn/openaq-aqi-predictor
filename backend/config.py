@@ -17,6 +17,8 @@ MODEL_META_PATH = Path(os.getenv("AQI_MODEL_META_PATH", MODEL_DIR / "model_meta.
 ALLOWED_ORIGINS = [
     "http://localhost",
     "http://localhost:3000",
+    "http://localhost:5173",
     "http://127.0.0.1",
     "http://127.0.0.1:3000",
+    "http://127.0.0.1:5173",
 ]

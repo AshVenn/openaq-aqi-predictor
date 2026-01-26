@@ -1,0 +1,29 @@
+{
+  "best_model_name": "RandomForest",
+  "best_params": {
+    "model__max_depth": 20,
+    "model__min_samples_leaf": 2,
+    "model__min_samples_split": 2,
+    "model__n_estimators": 200
+  },
+  "metrics": {
+    "mae": 4.907330548991448,
+    "rmse": 11.062818859630703,
+    "r2": 0.8109104584204226
+  },
+  "input_pollutants": [
+    "pm25",
+    "pm10",
+    "no2",
+    "o3",
+    "co",
+    "so2"
+  ],
+  "time_features": [
+    "hour",
+    "day_of_week",
+    "month"
+  ],
+  "uses_missingness_indicators": true,
+  "expects_standard_units": true
+}
