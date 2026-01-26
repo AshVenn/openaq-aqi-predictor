@@ -18,6 +18,19 @@ def _normalize_col_name(name: str) -> str:
     return name
 
 
+def normalize_pollutant_name(p: Optional[str]) -> str:
+    """
+    Normalize pollutant names so PM2.5 variants map to 'pm25' to avoid dropping data.
+    """
+    if p is None:
+        return ""
+    text = str(p).strip().lower()
+    compact = text.replace(" ", "").replace("_", "").replace("-", "")
+    if compact == "pm2.5" or compact == "pm25":
+        return "pm25"
+    return compact
+
+
 def standardize_columns(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
     normalized = {_normalize_col_name(c): c for c in df.columns}
@@ -73,8 +86,10 @@ def load_raw_data(path: str) -> pd.DataFrame:
 def clean_raw_data(df: pd.DataFrame) -> pd.DataFrame:
     df = standardize_columns(df)
 
-    df["pollutant"] = df["pollutant"].astype(str).str.strip().str.lower()
+    raw_pollutants = df["pollutant"].copy()
+    df["pollutant"] = df["pollutant"].apply(normalize_pollutant_name)
     df = df[df["pollutant"].isin(POLLUTANTS)]
+    raw_has_pm25 = raw_pollutants.apply(normalize_pollutant_name).eq("pm25").any()
 
     df["unit"] = df["unit"].apply(normalize_unit)
     df["value"] = pd.to_numeric(df["value"], errors="coerce")
@@ -121,6 +136,11 @@ def clean_raw_data(df: pd.DataFrame) -> pd.DataFrame:
     ]
     keep_cols = [c for c in keep_cols if c in df.columns]
     df = df[keep_cols]
+
+    print("Pollutant counts after cleaning:")
+    print(df["pollutant"].value_counts(dropna=False))
+    if raw_has_pm25:
+        assert df["pollutant"].eq("pm25").any(), "pm25 present in raw data but missing after cleaning"
     return df
 
 
