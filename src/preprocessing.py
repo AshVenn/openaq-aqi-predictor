@@ -6,7 +6,7 @@ from typing import Optional, Tuple
 import numpy as np
 import pandas as pd
 
-from aqi import convert_to_standard
+from src.aqi import convert_to_standard
 
 
 POLLUTANTS = {"pm25", "pm10", "no2", "o3", "co", "so2"}
