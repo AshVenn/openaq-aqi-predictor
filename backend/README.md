@@ -10,6 +10,8 @@ python -m venv .venv
 pip install -r backend/requirements.txt
 ```
 
+The backend pins `scikit-learn==1.6.1` to match the exported model artifacts.
+
 ## API auth (Bearer token)
 
 Create `backend/.env` (auto-loaded on startup):
