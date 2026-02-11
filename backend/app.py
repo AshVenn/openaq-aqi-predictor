@@ -81,15 +81,24 @@ def predict(request: PredictRequest):
 
     X, standardized, provided = build_feature_frame(request, feature_cols, input_pollutants)
     aqi_exact, aqi_category_exact = compute_exact_aqi(standardized)
+    all_pollutants_provided = all(
+        standardized.get(pollutant) is not None for pollutant in input_pollutants
+    )
 
-    if artifacts.model is None:
-        aqi_pred = None
+    if all_pollutants_provided and aqi_exact is not None:
+        # When all pollutant inputs are present, use direct AQI calculation (max IAQI).
+        aqi_pred = aqi_exact
+        aqi_category_pred = aqi_category_exact
         used_model = False
     else:
-        aqi_pred = float(artifacts.model.predict(X)[0])
-        used_model = True
+        if artifacts.model is None:
+            aqi_pred = None
+            used_model = False
+        else:
+            aqi_pred = float(artifacts.model.predict(X)[0])
+            used_model = True
 
-    aqi_category_pred = aqi_category(aqi_pred) if aqi_pred is not None else None
+        aqi_category_pred = aqi_category(aqi_pred) if aqi_pred is not None else None
 
     model_info = ModelInfo(
         best_model_name=artifacts.meta.get("best_model_name"),
