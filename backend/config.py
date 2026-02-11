@@ -17,7 +17,7 @@ FEATURE_COLS_PATH = Path(
 )
 MODEL_META_PATH = Path(os.getenv("AQI_MODEL_META_PATH", MODEL_DIR / "model_meta.json"))
 
-ALLOWED_ORIGINS = [
+DEFAULT_ALLOWED_ORIGINS = [
     "http://localhost",
     "http://localhost:3000",
     "http://localhost:5173",
@@ -25,6 +25,21 @@ ALLOWED_ORIGINS = [
     "http://127.0.0.1:3000",
     "http://127.0.0.1:5173",
 ]
+
+EXTRA_ALLOWED_ORIGINS = [
+    origin.strip()
+    for origin in os.getenv("AQI_ALLOWED_ORIGINS", "").split(",")
+    if origin.strip()
+]
+
+ALLOWED_ORIGINS = [*DEFAULT_ALLOWED_ORIGINS, *EXTRA_ALLOWED_ORIGINS]
+ALLOWED_ORIGIN_REGEX = (
+    os.getenv(
+        "AQI_ALLOWED_ORIGIN_REGEX",
+        r"^https?://[a-z0-9-]+\.167\.235\.153\.252\.sslip\.io$",
+    ).strip()
+    or None
+)
 
 API_BEARER_TOKEN = os.getenv("AQI_API_BEARER_TOKEN", "").strip()
 REQUIRE_API_AUTH = os.getenv("AQI_REQUIRE_API_AUTH", "true").strip().lower() in {

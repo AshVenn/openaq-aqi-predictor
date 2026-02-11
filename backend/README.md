@@ -24,6 +24,8 @@ You can start from `backend/.env.example`.
 Optional:
 - `AQI_REQUIRE_API_AUTH=true` (default) requires bearer auth on all endpoints.
 - `AQI_REQUIRE_API_AUTH=false` disables auth (local dev only).
+- `AQI_ALLOWED_ORIGINS` accepts comma-separated frontend origins.
+- `AQI_ALLOWED_ORIGIN_REGEX` accepts a regex for dynamic origins (defaults to `*.***.***.****.***.sslip.io`).
 
 ## Model artifacts
 

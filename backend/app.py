@@ -12,7 +12,12 @@ ROOT_DIR = Path(__file__).resolve().parents[1]
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
-from .config import ALLOWED_ORIGINS, API_BEARER_TOKEN, REQUIRE_API_AUTH
+from .config import (
+    ALLOWED_ORIGINS,
+    ALLOWED_ORIGIN_REGEX,
+    API_BEARER_TOKEN,
+    REQUIRE_API_AUTH,
+)
 from .model_loader import get_artifacts
 from .predict import POLLUTANTS_ALL, build_feature_frame, compute_exact_aqi
 from .schemas import InputSummary, ModelInfo, PredictRequest, PredictResponse
@@ -56,6 +61,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
+    allow_origin_regex=ALLOWED_ORIGIN_REGEX,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
