@@ -98,13 +98,26 @@ def predict(request: PredictRequest):
         used_model = False
     else:
         if artifacts.model is None:
-            aqi_pred = None
+            # Fallback to exact AQI when model is unavailable.
+            aqi_pred = aqi_exact
+            aqi_category_pred = aqi_category_exact
             used_model = False
         else:
-            aqi_pred = float(artifacts.model.predict(X)[0])
-            used_model = True
-
-        aqi_category_pred = aqi_category(aqi_pred) if aqi_pred is not None else None
+            try:
+                aqi_pred = float(artifacts.model.predict(X)[0])
+                aqi_category_pred = aqi_category(aqi_pred)
+                used_model = True
+            except Exception as exc:
+                if aqi_exact is not None:
+                    # If model inference fails, return deterministic exact AQI when possible.
+                    aqi_pred = aqi_exact
+                    aqi_category_pred = aqi_category_exact
+                    used_model = False
+                else:
+                    raise HTTPException(
+                        status_code=422,
+                        detail=f"Model prediction failed: {exc}",
+                    ) from exc
 
     model_info = ModelInfo(
         best_model_name=artifacts.meta.get("best_model_name"),
