@@ -45,6 +45,25 @@ From the project root:
 uvicorn backend.app:app --reload --host 0.0.0.0 --port 8000
 ```
 
+## Run with Docker
+
+Build from the project root:
+
+```bash
+docker build -f backend/Dockerfile -t aqi-api:latest .
+```
+
+Run:
+
+```bash
+docker run -d --name aqi-api \
+  --restart unless-stopped \
+  -p 8000:8000 \
+  -e AQI_API_BEARER_TOKEN=replace-with-a-long-random-token \
+  -e AQI_REQUIRE_API_AUTH=true \
+  aqi-api:latest
+```
+
 ## Example request
 
 ```bash
